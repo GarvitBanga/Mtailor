@@ -2,6 +2,7 @@ from fastapi import FastAPI,File,UploadFile
 from model import ImgPreProcessing,ONNX
 from PIL import Image   
 import io
+import base64
 
 
 app=FastAPI()
@@ -18,12 +19,22 @@ def read_root():
 def health():
     return {"status":"healthy","model":"loaded"}
 
-@app.post("/predict")
-async def predict(file:UploadFile=File(...)):
+@app.post("/predictlocal")
+async def predictlocal(file:UploadFile=File(...)):
     try:
         image_data=await file.read()
         image=Image.open(io.BytesIO(image_data))
         processed_img=preprocessing.preprocess(image)
+        prediction=onnx_model.predict(processed_img)
+        return {"predicted_class":prediction}
+    except Exception as e:
+        return {"error":str(e)}
+@app.post("/predict")
+def predict(image):
+    try:
+        image_data=base64.b64decode(image)
+        img=Image.open(io.BytesIO(image_data))
+        processed_img=preprocessing.preprocess(img)
         prediction=onnx_model.predict(processed_img)
         return {"predicted_class":prediction}
     except Exception as e:
