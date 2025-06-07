@@ -12,7 +12,7 @@ if __name__ == "__main__":
         print("Preprocessing loading failed",e)
 
     test_images=["n01440764_tench.jpeg","n01667114_mud_turtle.JPEG"]
-    prediction_classes=[0,35]
+    labels=[0,35]
 
     print("Testing Preprocessing")
     for path in test_images:
@@ -33,7 +33,7 @@ if __name__ == "__main__":
         img=Image.open(path)
         img=preprocessing.preprocess(img)
         result=onnx.predict(img)
-        assert result==prediction_classes[i],"ONNX prediction failed for "+path
+        assert result==labels[i],"ONNX prediction failed for "+path
         print("ONNX prediction passed for",path)
 
 
