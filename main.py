@@ -3,7 +3,10 @@ from model import ImgPreProcessing,ONNX
 from PIL import Image   
 import io
 import base64
+from pydantic import BaseModel
 
+class ImageRequest(BaseModel):
+    image: str
 
 app=FastAPI()
 
@@ -30,9 +33,9 @@ async def predictlocal(file:UploadFile=File(...)):
     except Exception as e:
         return {"error":str(e)}
 @app.post("/predict")
-def predict(image):
+def predict(request: ImageRequest):
     try:
-        image_data=base64.b64decode(image)
+        image_data=base64.b64decode(request.image)
         img=Image.open(io.BytesIO(image_data))
         processed_img=preprocessing.preprocess(img)
         prediction=onnx_model.predict(processed_img)

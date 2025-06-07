@@ -12,7 +12,7 @@ def test_image(image_file):
     response=requests.post(f"{API_URL}/predict",json=payload,headers=headers)
     if response.status_code==200:
         result=response.json()
-        return result["result"]["predicted_class"]
+        return result["predicted_class"]
     else:
         print("Error: ",response.status_code)
         return None
