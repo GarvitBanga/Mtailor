@@ -19,9 +19,9 @@ jobs:
         
     - name: Deploy
       env:
-        INFERENCE_TOKEN: ${{ secrets.INFERENCE_TOKEN }}
+        LOGIN_KEY: ${{ secrets.LOGIN_KEY }}
       run: |
-        cerebrium login --api-key $INFERENCE_TOKEN
+        cerebrium login --api-key $LOGIN_KEY
         cerebrium deploy
         
     - run: sleep 100
