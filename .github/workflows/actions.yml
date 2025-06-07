@@ -1,31 +1,52 @@
-name: Deploy
+name: Cerebrium Deployment
 
 on:
   push:
-    branches: [main]
+    branches:
+      - main
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: "Environment"
+        type: choice
+        options:
+          - "dev"
+          - "prod"
+        required: true
+        default: "dev"
 
 jobs:
-  deploy:
+  deployment:
     runs-on: ubuntu-latest
-    
+    environment: ${{ github.event.inputs.environment || (github.ref == 'refs/heads/main' && 'prod') || 'dev' }}
+    env:
+      ENV: ${{ github.event.inputs.environment || (github.ref == 'refs/heads/main' && 'prod') || 'dev' }}
+      PROJECT_ID: ${{ secrets.PROJECT_ID }}
+      ACCESS_TOKEN: ${{ secrets.ACCESS_TOKEN }}
+      REFRESH_TOKEN: ${{ secrets.REFRESH_TOKEN }}
     steps:
-    - uses: actions/checkout@v3
-    - uses: actions/setup-python@v3
-      with:
-        python-version: '3.10'
-        
-    - run: pip install cerebrium requests pillow numpy
-    - run: docker build -t mtailor .
-        
-    - name: Deploy
-      env:
-        LOGIN_KEY: ${{ secrets.LOGIN_KEY }}
-      run: |
-        cerebrium login --api-key $LOGIN_KEY
-        cerebrium deploy
-        
-    - run: sleep 100
-    - run: python test_server.py --preset
-    - run: |
-        curl -H "Authorization: Bearer ${{ secrets.INFERENCE_TOKEN }}" \
-             https://api.cortex.cerebrium.ai/v4/p-eb829d71/mtailor/health 
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.10"
+
+      - name: Install dependencies
+        run: pip install cerebrium requests pillow numpy
+
+      - run: docker build -t mtailor .
+
+      - name: Add Auth keys
+        run: cerebrium save-auth-config "$ACCESS_TOKEN" "$REFRESH_TOKEN" "$PROJECT_ID"
+
+      - name: Deploy App
+        run: cerebrium deploy
+
+      - run: sleep 100
+
+      - name: Test deployed model
+        run: python test_server.py --preset
+
+      - name: Health check
+        run: |
+          curl -H "Authorization: Bearer ${{ secrets.INFERENCE_TOKEN }}" \
+               https://api.cortex.cerebrium.ai/v4/p-eb829d71/mtailor/health 
