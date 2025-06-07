@@ -39,7 +39,8 @@ jobs:
         run: cerebrium save-auth-config "$ACCESS_TOKEN" "$REFRESH_TOKEN" "$PROJECT_ID"
 
       - name: Deploy App
-        run: cerebrium deploy
+        run: |
+          cerebrium deploy -y --disable-syntax-check --disable-animation
 
       - run: sleep 100
 
